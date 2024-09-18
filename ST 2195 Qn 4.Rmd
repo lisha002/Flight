@@ -1,0 +1,71 @@
+---
+title: "ST 2195 Qn 4"
+output: html_document
+---
+
+# Can you detect cascading failures as delays in one airport cause delays in others.
+
+## Import Packages
+
+```{r}
+install.packages("reshape2")
+library("reshape2")
+install.packages('ggplot2')
+library("ggplot2")
+install.packages("dplyr")
+library(dplyr)
+install.packages("tidyr")
+library(tidyr)
+```
+
+## Importing Data
+
+```{r}
+df2006 <- read.csv("2006.csv") 
+df2007 <- read.csv("2007.csv")
+```
+
+## Data Wrangling
+Keep relevant data.
+```{r}
+table2006 <- df2006[,c("Year","Month","DayofMonth","DepTime","CRSDepTime","ArrTime","CRSArrTime","FlightNum","TailNum","ArrDelay","DepDelay","Origin","Dest")]
+table2007 <- df2007[,c("Year","Month","DayofMonth","DepTime","CRSDepTime","ArrTime","CRSArrTime","FlightNum","TailNum","ArrDelay","DepDelay","Origin","Dest")]
+```
+
+## Delayed Flight
+Now we will randomly choose a flight to find if there is cascading delay.
+### 2006
+
+```{r}
+# First we get the data of particular date with more than 30 mins delay. From the previous question we found that ATL is the busiest airport so we will use that airport.
+flight2006 <- table2006[table2006$Month == 2 & table2006$DayofMonth == 2 & table2006$ArrDelay > 30 & table2006$Origin == "ATL",]
+# Now we randomly input a number in the code below to get the flight detail.
+delayedflight2006 <- flight2006[237,]
+delayedflight2006
+# We filter the table2006 to find the flight that will be leaving from Dest above. We use the filter of TailNum as the tail number is always the same.
+flight2006_cascading <- table2006[table2006$Month == 2 & table2006$DayofMonth == 3 & table2006$Origin == "LAS" & table2006$TailNum == "N683DA" & table2006$DepTime < 600, ]
+flight2006_cascading
+```
+
+### 2007
+We repeat what is done in 2006 for 2007 using 2007 data.
+```{r}
+flight2007 <- table2007[table2007$Month == 6 & table2007$DayofMonth == 28 & table2007$ArrDelay > 30 & table2007$Origin == "ATL",]
+delayedflight2007 <- flight2007[210,]
+delayedflight2007
+
+flight2007_cascading <- table2007[table2007$Month == 6 & table2007$DayofMonth == 28 & table2007$Origin == "SOP" & table2007$TailNum == "N908EV", ]
+flight2007_cascading
+```
+
+
+
+
+
+
+
+
+
+
+
+

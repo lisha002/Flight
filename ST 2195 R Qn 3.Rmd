@@ -1,0 +1,132 @@
+---
+title: "ST 2195 Qn 3"
+output: html_document
+---
+
+# How does the number of people flying between different locations change over time?
+
+## Import Packages
+```{r}
+install.packages("reshape2")
+library("reshape2")
+install.packages('ggplot2')
+library("ggplot2")
+install.packages("dplyr")
+library(dplyr)
+install.packages("tidyr")
+library(tidyr)
+```
+
+## Importing Data
+```{r}
+table2006 <- read.csv("2006.csv") 
+table2007 <- read.csv("2007.csv")
+airports <- read.csv("airports.csv")
+```
+
+## Data Wrangling
+We keep the columns that we will be using. we rename column 'iata' in airports data so that we can merge with the data
+```{r}
+df2006 <- table2006[,c("Year","Month","Origin","Dest")]
+df2007 <- table2007[,c("Year","Month","Origin","Dest")]
+dfairport <- airports[,c("iata","airport")]
+dfairport1 <- dfairport %>% rename("Origin" = "iata")
+airport2006 <- merge(df2006,dfairport1,by="Origin")
+airport2007 <- merge(df2007,dfairport1,by="Origin")
+```
+
+## Busiest Airport
+We will first find the airport with most departing flights. Then, we find the top 4 most traveled to airport from the airport with the most departing flights. 
+```{r}
+combinedairport <- rbind(airport2006,airport2007)
+
+aggairport_tbl  <- combinedairport %>% group_by(Origin) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+dfairport_tbl <- aggairport_tbl %>% as.data.frame()
+# We arrange the summarised table from above in descending order and slice only the first 3 rows.
+dfbusiestairport <- dfairport_tbl %>% arrange(desc(total_count)) %>% slice(1:3)
+dfbusiestairport
+# Keep only the rows with 'ATL' in the column 'Origin'
+dfATL <- combinedairport[combinedairport$Origin == 'ATL',]
+# Repeat as done above to find the top 4 most traveled to airport.
+aggdest_tbl  <- dfATL %>% group_by(Dest) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+dfdest_tbl <- aggdest_tbl %>% as.data.frame()
+dfbusiestdest <- dfdest_tbl %>%                                     
+  arrange(desc(total_count)) %>% slice(1:4)
+dfbusiestdest  
+```
+
+## Data for Plotting
+Now we use the information found above to get the data to plot the line graph. 
+### 2006
+```{r}
+# Keep rows with value 'ATL' in the column 'Origin"
+airport2006_ATL <- airport2006[airport2006$Origin == 'ATL',]
+# Keep the rows with value 'LGA' in the column 'Dest' and the count of number of flights.
+ATL_LGA2006 <- airport2006_ATL[airport2006_ATL$Dest == 'LGA',]
+agg2006LGA_tbl  <- ATL_LGA2006 %>% group_by(Month) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+# Keep the rows with value 'DFW' in the column 'Dest'  and the count of number of flights.          
+ATL_DFW2006 <- airport2006_ATL[airport2006_ATL$Dest == 'DFW',]
+agg2006DFW_tbl  <- ATL_DFW2006 %>% group_by(Month) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+# Keep the rows with value 'MCO' in the column 'Dest' and the count of number of flights.
+ATL_MCO2006 <- airport2006_ATL[airport2006_ATL$Dest == 'MCO',]
+agg2006MCO_tbl  <- ATL_MCO2006 %>% group_by(Month) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+# Keep the rows with value 'EWR' in the column 'Dest' and the count of number of flights.
+ATL_EWR2006 <- airport2006_ATL[airport2006_ATL$Dest == 'EWR',]
+agg2006EWR_tbl  <- ATL_EWR2006 %>% group_by(Month) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+```
+
+### 2007
+Do the same as done in ### 2006 but with 2007 data.
+```{r}
+airport2007_ATL <- airport2007[airport2007$Origin == 'ATL',]
+
+ATL_LGA2007 <- airport2007_ATL[airport2007_ATL$Dest == 'LGA',]
+agg2007LGA_tbl  <- ATL_LGA2007 %>% group_by(Month) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+          
+ATL_DFW2007 <- airport2007_ATL[airport2007_ATL$Dest == 'DFW',]
+agg2007DFW_tbl  <- ATL_DFW2007 %>% group_by(Month) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+
+ATL_MCO2007 <- airport2007_ATL[airport2007_ATL$Dest == 'MCO',]
+agg2007MCO_tbl  <- ATL_MCO2007 %>% group_by(Month) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+
+ATL_EWR2007 <- airport2007_ATL[airport2007_ATL$Dest == 'EWR',]
+agg2007EWR_tbl  <- ATL_EWR2007 %>% group_by(Month) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+```
+
+## Plotting
+We will be plotting line graph with both years in the same graph for each airport.
+```{r}
+# Plotting the year 2006.
+plot(agg2006LGA_tbl$Month, agg2006LGA_tbl$total_count, type='l', xlab='Month',ylab='Frequency',main='LGA', col = 'Blue',ylim=c(780,920))
+# Plotting another in the same graph as above for year 2007.
+lines(agg2007LGA_tbl$Month, agg2007LGA_tbl$total_count, type='l', col = 'Red')
+
+plot(agg2006DFW_tbl$Month, agg2006DFW_tbl$total_count, type='l', xlab='Month',ylab='Frequency',main='DFW', col = 'Blue',ylim=c(680,900))
+lines(agg2007DFW_tbl$Month, agg2007DFW_tbl$total_count, type='l', col = 'Red')
+
+plot(agg2006MCO_tbl$Month, agg2006MCO_tbl$total_count, type='l', xlab='Month',ylab='Frequency',main='MCO', col = 'Blue',ylim=c(660,850))
+lines(agg2007MCO_tbl$Month, agg2007MCO_tbl$total_count, type='l', col = 'Red')
+
+plot(agg2006EWR_tbl$Month, agg2006EWR_tbl$total_count, type='l', xlab='Month',ylab='Frequency',main='EWR', col = 'Blue',ylim=c(530,750))
+lines(agg2007EWR_tbl$Month, agg2007EWR_tbl$total_count, type='l', col = 'Red')
+```

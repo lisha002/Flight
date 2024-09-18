@@ -1,0 +1,62 @@
+---
+title: "ST 2195 Coursework"
+output: html_document
+---
+# When is the best time of day,day of the week, and time of year to fly to minimise delays?
+
+## Install Packages
+We will install the packages that we will be using for this question.
+```{r}
+install.packages("reshape2")
+library("reshape2")
+install.packages('ggplot2')
+library("ggplot2")
+install.packages("dplyr")
+library(dplyr)
+install.packages("tidyr")
+library(tidyr)
+```
+
+## Import Data
+I have imported the two data that we will be using for this question.
+```{r}
+table2006 <- read.csv("2006.csv") 
+table2007 <- read.csv("2007.csv")
+```
+
+## Data Wrangling
+In this section we will reduce the data's column to the relevant columns that will be used for this question. We remove 'NA' values for the data that is using arrival delay. For the diverted data we do not remove 'na' values. We will then merge the two data.
+```{r}
+q1_2006 <- table2006[,c("Year","Month","DayofMonth","DayOfWeek","DepTime","ArrDelay")]
+q1_2007 <- table2007[,c("Year","Month","DayofMonth","DayOfWeek","DepTime","ArrDelay")]
+q1_2006_nona <- na.omit(q1_2006)
+q1_2007_nona <- na.omit(q1_2007)
+# We use rbind to merge the two data.
+q1_combined <- rbind(q1_2006_nona,q1_2007_nona)
+```
+
+## Day of Week
+First we will address the Day of the week part.Once we remove the two columns that will be used from the combined data we average the arrival delay by each day. Once we got the average data we can plot a bar graph.
+```{r}
+q1day <- q1_combined[,c("DayOfWeek","ArrDelay")]
+q1day_avg <- aggregate(.~DayOfWeek,data=q1day,mean)
+barplot(height=q1day_avg$ArrDelay, names=q1day_avg$DayOfWeek, xlab="Day Of Week", ylab="Avg Arr Delay", main="Avg Arr Delay by Day",ylim=c(0,14))
+```
+
+## Time of Year
+We repeat what we did for the prevous section, now with the column 'Month'
+```{r}
+q1month <- q1_combined[,c("Month","ArrDelay")]
+q1month_avg <- aggregate(.~Month,data=q1month,mean)
+barplot(height=q1month_avg$ArrDelay, names=q1month_avg$Month, xlab="Month", ylab="Avg Arr Delay", main="Avg Arr Delay by Month", ylim=c(0,16))
+
+```
+
+## Time of Day
+We will mutate the combined data to split them according to the time of the day. We use 'DepTime'. After mutating we do the same as before.
+```{r}
+q1_combinedtime <- q1_combined %>% mutate(Time = case_when(DepTime < 600 ~ 'Early Morning', DepTime < 1200 ~ 'Morning', DepTime < 1800 ~ 'Afternoon', DepTime < 2400 ~ 'Night'))
+q1time <- q1_combinedtime[,c("ArrDelay","Time")]
+q1time_avg <- aggregate(.~Time,data=q1time,mean)
+barplot(height=q1time_avg$ArrDelay, names=q1time_avg$Time, xlab="Time Of Day", ylab="Avg Arr Delay", main="Avg Arr Delay by Time", ylim=c(0,24))
+```

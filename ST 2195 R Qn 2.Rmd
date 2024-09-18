@@ -1,0 +1,101 @@
+---
+title: "ST 2195 R Qn 2"
+output: html_document
+---
+# Qn 2: Do older planes suffer more delays?
+
+## Install Packages
+The packages that will be used for this question.
+```{r}
+install.packages("reshape2")
+library("reshape2")
+install.packages('ggplot2')
+library("ggplot2")
+install.packages("dplyr")
+library(dplyr)
+install.packages("tidyr")
+library(tidyr)
+install.packages("RColorBrewer")
+library("RColorBrewer")
+```
+
+## Importing Data
+Import the data that we will be using.
+```{r}
+planedata <-read.csv("plane-data.csv") 
+table2006 <- read.csv("2006.csv") 
+table2007 <- read.csv("2007.csv")
+table2004 <- read.csv("2004.csv")
+table2005 <- read.csv("2005.csv")
+```
+
+## Data Wrangling
+
+```{r}
+# Keeping the columns that we will be using.
+q2_2006 <- table2006[,c("Year","TailNum","ArrDelay")]
+q2_2007 <- table2007[,c("Year","TailNum","ArrDelay")]
+q2_2004 <- table2004[,c("Year","TailNum","ArrDelay")]
+q2_2005 <- table2005[,c("Year","TailNum","ArrDelay")]
+# Removing the na values
+q2_2006_nona <- na.omit(q2_2006)
+q2_2007_nona <- na.omit(q2_2007)
+q2_2004_nona <- na.omit(q2_2004)
+q2_2005_nona <- na.omit(q2_2005)
+# We keep the relevant data 
+q2planedata <- planedata[,c("tailnum","year")]
+# We re name a column so that it cane merged with same column. When using this code "New Name" = "Old Name" We remove the first 34 rows as they have empty values for the column 'year'
+q2planedata1 <- q2planedata %>% rename("TailNum" = "tailnum")
+q2planedatanona <- q2planedata1[-(1:34),]
+# We use merge instead as they have a common column whereas rbind is to just combine data with common column. By using the values that are common in both data under the column 'TailNum' will merge. If there is no common values they will be removed.
+q2table2006 <- merge(q2_2006_nona,q2planedatanona,by="TailNum")
+q2table2007 <- merge(q2_2007_nona,q2planedatanona,by="TailNum")
+q2table2004 <- merge(q2_2004_nona,q2planedatanona,by="TailNum")
+q2table2005 <- merge(q2_2005_nona,q2planedatanona,by="TailNum")
+```
+
+## Age of Plane
+In this section we find the age of the plane for each year.
+### 2006
+```{r}
+# the column 'year' is not a numeric column. Thus, we passit as numeric in order to subtract.
+q2table2006$Age <- q2table2006$Year - as.numeric(q2table2006$year)
+# We keep the column use and average the arrival delay.
+q2t2006 <- q2table2006[,c("ArrDelay","Age")]
+q2p2006 <- aggregate(.~Age,data=q2t2006,mean)
+# we remove the rows that has values that is not feasible to have as age of plane.
+df2006 <- q2p2006[-c(1,49),]
+```
+
+### 2007
+```{r}
+q2table2007$Age <- q2table2007$Year - as.numeric(q2table2007$year)
+q2t2007 <- q2table2007[,c("ArrDelay","Age")]
+q2p2007 <- aggregate(.~Age,data=q2t2007,mean)
+df2007 <- q2p2007[-c(49),]
+```
+
+### 2004
+```{r}
+q2table2004$Age <- q2table2004$Year - as.numeric(q2table2004$year)
+q2t2004 <- q2table2004[,c("ArrDelay","Age")]
+q2p2004 <- aggregate(.~Age,data=q2t2004,mean)
+df2004 <- q2p2004[-c(1,47),]
+```
+
+### 2005
+```{r}
+q2table2005$Age <- q2table2005$Year - as.numeric(q2table2005$year)
+q2t2005 <- q2table2005[,c("ArrDelay","Age")]
+q2p2005 <- aggregate(.~Age,data=q2t2005,mean)
+df2005 <- q2p2005[-c(1,48),]
+```
+
+## Plotting
+We the do bar plot to show whether the age of plane affects the delay.
+```{r}
+barplot(height=df2004$ArrDelay, names=df2004$Age, xlab="Age of Plane", ylab="Avg Arr Delay", main="2004",ylim=c(0,10))
+barplot(height=df2005$ArrDelay, names=df2005$Age, xlab="Age of Plane", ylab="Avg Arr Delay", main="2005",ylim=c(0,10))
+barplot(height=df2006$ArrDelay, names=df2006$Age, xlab="Age of Plane", ylab="Avg Arr Delay", main="2006",ylim=c(0,14))
+barplot(height=df2007$ArrDelay, names=df2007$Age, xlab="Age of Plane", ylab="Avg Arr Delay", main="2007",ylim=c(0,18))
+```
